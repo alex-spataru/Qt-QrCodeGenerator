@@ -15,7 +15,7 @@ Qt QR Code Generator is a simple C++ class that uses the [qrcodegen](https://git
 
 QrCodeGenerator generator;
 QString data = "https://www.example.com";
-QImage qrCodeImage = generator.generateQRCode(data);
+QImage qrCodeImage = generator.generateQr(data);
 ```
 
 4. That's all! Check the [example](example) project as a reference for your project if needed.
