@@ -87,8 +87,10 @@ void MainWindow::onGenerateButtonClicked() {
     auto text = m_lineEdit->text();
 
     // Generate QR code from text
-    auto image = m_generator.generateQr(text);
+    QImage unscaledImage = m_generator.generateQr(text);
+    QImage image = unscaledImage.scaled(500, 500);
 
     // Display generated image
     m_qrCodeDisplay->setPixmap(QPixmap::fromImage(image));
+    m_qrCodeDisplay->setToolTip(text);
 }
