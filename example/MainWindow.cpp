@@ -26,6 +26,9 @@
 #include <QFileDialog>
 #include <QStandardPaths>
 
+/**
+ * Constructor function, initializes the user interface & setups signals/slots.
+ */
 MainWindow::MainWindow()
 {
   // Initialize layout-related widgets
@@ -63,7 +66,7 @@ MainWindow::MainWindow()
   // Set window title
   setWindowTitle(tr("QR Code Generator"));
 
-  // Disable "Generate QR code" button when line edit contains empty text
+  // Update the QR code when the text changes
   connect(m_lineEdit, &QLineEdit::textChanged, this,
           [this](const QString &text) {
             m_saveButton->setEnabled(!text.isEmpty());
@@ -71,7 +74,7 @@ MainWindow::MainWindow()
               generateQrCode();
           });
 
-  // Update QR code when user clicks on the generate QR code button
+  // Export QR code as when user clicks on the save button
   connect(m_saveButton, &QPushButton::clicked, this, &MainWindow::saveQrCode);
 
   // Set "Hello World" text & generate QR code
@@ -79,6 +82,9 @@ MainWindow::MainWindow()
   generateQrCode();
 }
 
+/**
+ * Destructor function.
+ */
 MainWindow::~MainWindow()
 {
   delete m_label;
@@ -91,14 +97,21 @@ MainWindow::~MainWindow()
   delete m_centralWidget;
 }
 
+/**
+ * Generates a QR code from text input & saves it as a SVG file.
+ */
 void MainWindow::saveQrCode()
 {
+  // Obtain SVG data for QR code
   auto svg = m_generator.generateSvgQr(m_lineEdit->text());
   if (svg.isEmpty())
     return;
 
+  // Ask user where to save the SVG file
   auto path = QFileDialog::getSaveFileName(this, tr("Save QR Code"),
                                            QDir::homePath(), tr("*.svg"));
+
+  // Write SVG data into the file selected by the user
   if (!path.isEmpty())
   {
     QFile file(path);
@@ -110,6 +123,9 @@ void MainWindow::saveQrCode()
   }
 }
 
+/**
+ * Generates a QR code from text input & displays it in the UI.
+ */
 void MainWindow::generateQrCode()
 {
   // Get text from line edit
