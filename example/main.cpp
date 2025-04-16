@@ -22,6 +22,9 @@
 
 #include "MainWindow.h"
 
+/**
+ * Entry-point function of the application.
+ */
 int main(int argc, char **argv)
 {
   QApplication app(argc, argv);
