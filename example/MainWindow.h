@@ -30,27 +30,29 @@
 
 #include <QrCodeGenerator.h>
 
-class MainWindow : public QMainWindow {
-    Q_OBJECT
+class MainWindow : public QMainWindow
+{
+  Q_OBJECT
 
 public:
-    explicit MainWindow();
-    ~MainWindow();
+  explicit MainWindow();
+  ~MainWindow();
 
 private Q_SLOTS:
-    void onGenerateButtonClicked();
+  void saveQrCode();
+  void generateQrCode();
 
 private:
-    QrCodeGenerator m_generator;
+  QrCodeGenerator m_generator;
 
-    QWidget *m_header;
-    QWidget *m_centralWidget;
+  QWidget *m_header;
+  QWidget *m_centralWidget;
 
-    QLabel *m_label;
-    QLineEdit *m_lineEdit;
-    QLabel *m_qrCodeDisplay;
-    QPushButton *m_pushButton;
+  QLabel *m_label;
+  QLineEdit *m_lineEdit;
+  QLabel *m_qrCodeDisplay;
+  QPushButton *m_saveButton;
 
-    QHBoxLayout *m_headerLayout;
-    QVBoxLayout *m_verticalLayout;
+  QHBoxLayout *m_headerLayout;
+  QVBoxLayout *m_verticalLayout;
 };

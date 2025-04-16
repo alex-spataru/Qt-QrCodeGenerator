@@ -22,75 +22,104 @@
 
 #include "MainWindow.h"
 
-MainWindow::MainWindow() {
-    // Initialize layout-related widgets
-    m_centralWidget = new QWidget(this);
-    m_header = new QWidget(m_centralWidget);
+#include <QFile>
+#include <QFileDialog>
+#include <QStandardPaths>
 
-    // Initialize horizontal layout widgets
-    m_label = new QLabel(tr("Message") + ": ", m_header);
-    m_pushButton = new QPushButton(tr("Generate QR Code"), m_header);
-    m_lineEdit = new QLineEdit(m_header);
+MainWindow::MainWindow()
+{
+  // Initialize layout-related widgets
+  m_centralWidget = new QWidget(this);
+  m_header = new QWidget(m_centralWidget);
 
-    // Initialize QR code image label
-    m_qrCodeDisplay = new QLabel(m_centralWidget);
-    m_qrCodeDisplay->setMinimumSize(QSize(500, 500));
-    m_qrCodeDisplay->setMaximumSize(QSize(500, 500));
+  // Initialize horizontal layout widgets
+  m_label = new QLabel(tr("Message") + ": ", m_header);
+  m_saveButton = new QPushButton(tr("Export QR Code"), m_header);
+  m_lineEdit = new QLineEdit(m_header);
 
-    // Setup horizontal layout for line edit & push button
-    m_verticalLayout = new QVBoxLayout(m_centralWidget);
-    m_headerLayout = new QHBoxLayout(m_header);
-    m_headerLayout->addWidget(m_label);
-    m_headerLayout->addWidget(m_lineEdit);
-    m_headerLayout->addWidget(m_pushButton);
-    m_headerLayout->setContentsMargins(0, 0, 0, 0);
-    m_headerLayout->setStretch(1, 1);
+  // Initialize QR code image label
+  m_qrCodeDisplay = new QLabel(m_centralWidget);
+  m_qrCodeDisplay->setMinimumSize(QSize(500, 500));
+  m_qrCodeDisplay->setMaximumSize(QSize(500, 500));
 
-    // Setup vertical layout with QR code label & QR code generation controls
-    m_verticalLayout->addWidget(m_header);
-    m_verticalLayout->addWidget(m_qrCodeDisplay);
-    m_verticalLayout->setStretch(0, 1);
+  // Setup horizontal layout for line edit & push button
+  m_verticalLayout = new QVBoxLayout(m_centralWidget);
+  m_headerLayout = new QHBoxLayout(m_header);
+  m_headerLayout->addWidget(m_label);
+  m_headerLayout->addWidget(m_lineEdit);
+  m_headerLayout->addWidget(m_saveButton);
+  m_headerLayout->setContentsMargins(0, 0, 0, 0);
+  m_headerLayout->setStretch(1, 1);
 
-    // Set central widget & resize window to minimum size possible
-    setCentralWidget(m_centralWidget);
-    setFixedSize(minimumSize());
+  // Setup vertical layout with QR code label & QR code generation controls
+  m_verticalLayout->addWidget(m_header);
+  m_verticalLayout->addWidget(m_qrCodeDisplay);
+  m_verticalLayout->setStretch(0, 1);
 
-    // Set window title
-    setWindowTitle(tr("QR Code Generator"));
+  // Set central widget & resize window to minimum size possible
+  setCentralWidget(m_centralWidget);
+  setFixedSize(minimumSize());
 
-    // Disable "Generate QR code" button when line edit contains empty text
-    connect(m_lineEdit, &QLineEdit::textChanged, this, [this](const QString& text) {
-        m_pushButton->setEnabled(!text.isEmpty());
-    });
+  // Set window title
+  setWindowTitle(tr("QR Code Generator"));
 
-    // Update QR code when user clicks on the generate QR code button
-    connect(m_pushButton, &QPushButton::clicked, this, &MainWindow::onGenerateButtonClicked);
+  // Disable "Generate QR code" button when line edit contains empty text
+  connect(m_lineEdit, &QLineEdit::textChanged, this,
+          [this](const QString &text) {
+            m_saveButton->setEnabled(!text.isEmpty());
+            if (!text.isEmpty())
+              generateQrCode();
+          });
 
-    // Set "Hello World" text & generate QR code
-    m_lineEdit->setText(tr("Hello World!"));
-    onGenerateButtonClicked();
+  // Update QR code when user clicks on the generate QR code button
+  connect(m_saveButton, &QPushButton::clicked, this, &MainWindow::saveQrCode);
+
+  // Set "Hello World" text & generate QR code
+  m_lineEdit->setText(tr("Hello World!"));
+  generateQrCode();
 }
 
-MainWindow::~MainWindow() {
-    delete m_label;
-    delete m_lineEdit;
-    delete m_pushButton;
-    delete m_qrCodeDisplay;
-    delete m_headerLayout;
-    delete m_verticalLayout;
-    delete m_header;
-    delete m_centralWidget;
+MainWindow::~MainWindow()
+{
+  delete m_label;
+  delete m_lineEdit;
+  delete m_saveButton;
+  delete m_qrCodeDisplay;
+  delete m_headerLayout;
+  delete m_verticalLayout;
+  delete m_header;
+  delete m_centralWidget;
 }
 
-void MainWindow::onGenerateButtonClicked() {
-    // Get text from line edit
-    auto text = m_lineEdit->text();
+void MainWindow::saveQrCode()
+{
+  auto svg = m_generator.generateSvgQr(m_lineEdit->text());
+  if (svg.isEmpty())
+    return;
 
-    // Generate QR code from text
-    QImage unscaledImage = m_generator.generateQr(text);
-    QImage image = unscaledImage.scaled(500, 500);
+  auto path = QFileDialog::getSaveFileName(this, tr("Save QR Code"),
+                                           QDir::homePath(), tr("*.svg"));
+  if (!path.isEmpty())
+  {
+    QFile file(path);
+    if (file.open(QFile::WriteOnly))
+    {
+      file.write(svg.toUtf8());
+      file.close();
+    }
+  }
+}
 
-    // Display generated image
-    m_qrCodeDisplay->setPixmap(QPixmap::fromImage(image));
-    m_qrCodeDisplay->setToolTip(text);
+void MainWindow::generateQrCode()
+{
+  // Get text from line edit
+  auto text = m_lineEdit->text();
+
+  // Generate QR code from text
+  QImage unscaledImage = m_generator.generateQr(text);
+  QImage image = unscaledImage.scaled(500, 500);
+
+  // Display generated image
+  m_qrCodeDisplay->setPixmap(QPixmap::fromImage(image));
+  m_qrCodeDisplay->setToolTip(text);
 }

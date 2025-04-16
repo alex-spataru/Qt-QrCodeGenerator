@@ -2,7 +2,7 @@
 
 Qt QR Code Generator is a simple C++ class that uses the [qrcodegen](https://github.com/nayuki/QR-Code-generator) library to generate QR codes from QStrings in Qt applications.
 
-[![Screenshot](example/screenshot.png)](example/screenshot.png)
+[![Demo](example/demo.gif)](example/demo.gif)
 
 ## Usage
 

@@ -33,9 +33,9 @@
  * @param parent QObject parent
  */
 QrCodeGenerator::QrCodeGenerator(QObject *parent)
-    : QObject(parent)
+  : QObject(parent)
 {
-    // No implementation needed for default constructor.
+  // No implementation needed for default constructor.
 }
 
 /**
@@ -46,12 +46,14 @@ QrCodeGenerator::QrCodeGenerator(QObject *parent)
  * @param errorCorrection The level of error correction to apply.
  * @return QImage representing the generated QR code.
  */
-QImage QrCodeGenerator::generateQr(const QString &data, quint16 size, quint16 borderSize,
+QImage QrCodeGenerator::generateQr(const QString &data, quint16 size,
+                                   quint16 borderSize,
                                    qrcodegen::QrCode::Ecc errorCorrection)
 {
-    auto b = data.toUtf8();
-    const auto qrCode = qrcodegen::QrCode::encodeText(b.constData(), errorCorrection);
-    return qrCodeToImage(qrCode, borderSize, size);
+  auto b = data.toUtf8();
+  const auto qrCode
+      = qrcodegen::QrCode::encodeText(b.constData(), errorCorrection);
+  return qrCodeToImage(qrCode, borderSize, size);
 }
 
 /**
@@ -64,9 +66,10 @@ QImage QrCodeGenerator::generateQr(const QString &data, quint16 size, quint16 bo
 QString QrCodeGenerator::generateSvgQr(const QString &data, quint16 borderSize,
                                        qrcodegen::QrCode::Ecc errorCorrection)
 {
-    auto b = data.toUtf8();
-    const auto qrCode = qrcodegen::QrCode::encodeText(b.constData(), errorCorrection);
-    return toSvgString(qrCode, borderSize);
+  auto b = data.toUtf8();
+  const auto qrCode
+      = qrcodegen::QrCode::encodeText(b.constData(), errorCorrection);
+  return toSvgString(qrCode, borderSize);
 }
 
 /**
@@ -75,31 +78,32 @@ QString QrCodeGenerator::generateSvgQr(const QString &data, quint16 borderSize,
  * @param border The border size to use.
  * @return QString containing the SVG representation of the QR code.
  */
-QString QrCodeGenerator::toSvgString(const qrcodegen::QrCode &qr, quint16 border) const
+QString QrCodeGenerator::toSvgString(const qrcodegen::QrCode &qr,
+                                     quint16 border) const
 {
-    QString str;
-    QTextStream sb(&str);
+  QString str;
+  QTextStream sb(&str);
 
-    sb << R"(<?xml version="1.0" encoding="UTF-8"?>)"
-       << R"(<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">)"
-       << R"(<svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 )"
-       << (qr.getSize() + border * 2) << " " << (qr.getSize() + border * 2)
-       << R"(" stroke="none"><rect width="100%" height="100%" fill="#FFFFFF"/><path d=")";
+  sb << R"(<?xml version="1.0" encoding="UTF-8"?>)"
+     << R"(<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">)"
+     << R"(<svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 )"
+     << (qr.getSize() + border * 2) << " " << (qr.getSize() + border * 2)
+     << R"(" stroke="none"><rect width="100%" height="100%" fill="#FFFFFF"/><path d=")";
 
-    for (int y = 0; y < qr.getSize(); y++)
+  for (int y = 0; y < qr.getSize(); y++)
+  {
+    for (int x = 0; x < qr.getSize(); x++)
     {
-        for (int x = 0; x < qr.getSize(); x++)
-        {
-            if (qr.getModule(x, y))
-            {
-                sb << (x == 0 && y == 0 ? "" : " ") << "M" << (x + border) << "," << (y + border)
-                   << "h1v1h-1z";
-            }
-        }
+      if (qr.getModule(x, y))
+      {
+        sb << (x == 0 && y == 0 ? "" : " ") << "M" << (x + border) << ","
+           << (y + border) << "h1v1h-1z";
+      }
     }
+  }
 
-    sb << R"(" fill="#000000"/></svg>)";
-    return str;
+  sb << R"(" fill="#000000"/></svg>)";
+  return str;
 }
 
 /**
@@ -109,15 +113,15 @@ QString QrCodeGenerator::toSvgString(const qrcodegen::QrCode &qr, quint16 border
  * @param size The image size to generate.
  * @return QImage representing the QR code.
  */
-QImage QrCodeGenerator::qrCodeToImage(const qrcodegen::QrCode &qrCode, quint16 border,
-                                      quint16 size) const
+QImage QrCodeGenerator::qrCodeToImage(const qrcodegen::QrCode &qrCode,
+                                      quint16 border, quint16 size) const
 {
-    QString svg = toSvgString(qrCode, border);
-    QSvgRenderer render(svg.toUtf8());
-    QImage image(size, size, QImage::Format_Mono);
-    image.fill(Qt::white);
-    QPainter painter(&image);
-    painter.setRenderHint(QPainter::Antialiasing);
-    render.render(&painter);
-    return image;
+  QString svg = toSvgString(qrCode, border);
+  QSvgRenderer render(svg.toUtf8());
+  QImage image(size, size, QImage::Format_Mono);
+  image.fill(Qt::white);
+  QPainter painter(&image);
+  painter.setRenderHint(QPainter::Antialiasing);
+  render.render(&painter);
+  return image;
 }
