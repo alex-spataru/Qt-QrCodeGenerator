@@ -126,8 +126,10 @@ QString QrCodeGenerator::toSvgString(const qrcodegen::QrCode &qr,
 //   return image;
 // }
 
-// QR code image is being rendered from SVG output, not directly from bitmaps or
-// matrices
+
+// QR code image is being rendered from SVG output, not directly from bitmaps or matrices
+// QSvgRenderer has internal limits on path complexity or buffer size — hitting
+// those leads to the truncation warning.
 //  If the generated SVG string is too large or malformed, the QSvgRenderer will
 //  throw warnings.
 // like:  W : qt.svg: Invalid path data; path truncated.
