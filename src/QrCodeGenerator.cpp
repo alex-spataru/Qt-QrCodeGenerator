@@ -113,15 +113,45 @@ QString QrCodeGenerator::toSvgString(const qrcodegen::QrCode &qr,
  * @param size The image size to generate.
  * @return QImage representing the QR code.
  */
+// QImage QrCodeGenerator::qrCodeToImage(const qrcodegen::QrCode &qrCode,
+//                                       quint16 border, quint16 size) const
+// {
+//   QString svg = toSvgString(qrCode, border);
+//   QSvgRenderer render(svg.toUtf8());
+//   QImage image(size, size, QImage::Format_Mono);
+//   image.fill(Qt::white);
+//   QPainter painter(&image);
+//   painter.setRenderHint(QPainter::Antialiasing);
+//   render.render(&painter);
+//   return image;
+// }
+
+// modified version that solve large string issue.
+// W : qt.svg: Invalid path data; path truncated.
 QImage QrCodeGenerator::qrCodeToImage(const qrcodegen::QrCode &qrCode,
                                       quint16 border, quint16 size) const
 {
-  QString svg = toSvgString(qrCode, border);
-  QSvgRenderer render(svg.toUtf8());
-  QImage image(size, size, QImage::Format_Mono);
+  const int qrSize = qrCode.getSize();
+  const int scale = size / (qrSize + 2 * border);
+
+  QImage image(size, size, QImage::Format_RGB32);
   image.fill(Qt::white);
+
   QPainter painter(&image);
-  painter.setRenderHint(QPainter::Antialiasing);
-  render.render(&painter);
+  painter.setBrush(Qt::black);
+  painter.setPen(Qt::NoPen);
+
+  for (int y = 0; y < qrSize; ++y)
+  {
+    for (int x = 0; x < qrSize; ++x)
+    {
+      if (qrCode.getModule(x, y))
+      {
+        QRect rect((x + border) * scale, (y + border) * scale, scale, scale);
+        painter.drawRect(rect);
+      }
+    }
+  }
+
   return image;
 }
