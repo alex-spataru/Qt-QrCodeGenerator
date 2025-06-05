@@ -57,6 +57,24 @@ QImage QrCodeGenerator::generateQr(const QString &data, quint16 size,
 }
 
 /**
+ * @brief Generates a QR code image from a given text string.
+ * @param data The data to encode in the QR code.
+ * @param size The image size for the generated QR code.
+ * @param borderSize The size of the border around the QR code.
+ * @param errorCorrection The level of error correction to apply.
+ * @return QImage representing the generated QR code.
+ */
+QImage QrCodeGenerator::generateQr(const QByteArray &data, quint16 size,
+                                   quint16 borderSize,
+                                   qrcodegen::QrCode::Ecc errorCorrection)
+{
+    std::vector<uint8_t> c(data.constData(), data.constData() + data.size());
+    const auto qrCode
+        = qrcodegen::QrCode::encodeBinary(c, errorCorrection);
+    return qrCodeToImage(qrCode, borderSize, size);
+}
+
+/**
  * @brief Generates an SVG string representing a QR code.
  * @param data The data to encode in the QR code.
  * @param borderSize The size of the border around the QR code.
