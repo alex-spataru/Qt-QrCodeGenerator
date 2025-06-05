@@ -60,6 +60,22 @@ public:
 
   /**
    * @brief Generates a QR code from the given data and error correction level.
+   * @param data The QByteArray containing the data to encode in the QR code.
+   * @param size The desired width/height of the generated image (default: 500).
+   * @param borderSize The desired border width of the generated image (default:
+   * 1).
+   * @param errorCorrection The desired error correction level (default:
+   * qrcodegen::QrCode::Ecc::MEDIUM).
+   *
+   * @return QImage containing the generated QR code.
+   */
+  QImage generateQr(const QByteArray &data, const quint16 size = 1000,
+                    const quint16 borderSize = 1,
+                    qrcodegen::QrCode::Ecc errorCorrection
+                    = qrcodegen::QrCode::Ecc::MEDIUM);
+
+  /**
+   * @brief Generates a QR code from the given data and error correction level.
    * @param data The QString containing the data to encode in the QR code.
    * @param borderSize The desired border width of the generated image (default:
    * 1).
