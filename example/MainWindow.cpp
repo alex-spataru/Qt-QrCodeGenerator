@@ -83,21 +83,6 @@ MainWindow::MainWindow()
 }
 
 /**
- * Destructor function.
- */
-MainWindow::~MainWindow()
-{
-  delete m_label;
-  delete m_lineEdit;
-  delete m_saveButton;
-  delete m_qrCodeDisplay;
-  delete m_headerLayout;
-  delete m_verticalLayout;
-  delete m_header;
-  delete m_centralWidget;
-}
-
-/**
  * Generates a QR code from text input & saves it as a SVG file.
  */
 void MainWindow::saveQrCode()
