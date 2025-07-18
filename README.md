@@ -20,6 +20,16 @@ QImage qrCodeImage = generator.generateQr(data);
 
 4. That's all! Check the [example](example) project as a reference for your project if needed.
 
+Here are the steps to run the example using cmake (specific steps for LINUX ONLY):
+```sh
+cd ./example
+mkdir -p build
+cd build
+cmake ../
+make
+./qrexample # runs executable
+```
+
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
