@@ -131,37 +131,21 @@ QString QrCodeGenerator::toSvgString(const qrcodegen::QrCode &qr,
  * @param size The image size to generate.
  * @return QImage representing the QR code.
  */
-// QImage QrCodeGenerator::qrCodeToImage(const qrcodegen::QrCode &qrCode,
-//                                       quint16 border, quint16 size) const
-// {
-//   QString svg = toSvgString(qrCode, border);
-//   QSvgRenderer render(svg.toUtf8());
-//   QImage image(size, size, QImage::Format_Mono);
-//   image.fill(Qt::white);
-//   QPainter painter(&image);
-//   painter.setRenderHint(QPainter::Antialiasing);
-//   render.render(&painter);
-//   return image;
-// }
-
-// QR code image is being rendered from SVG output, not directly from bitmaps or
-// matrices QSvgRenderer has internal limits on path complexity or buffer size —
-// hitting those leads to the truncation warning.
-//  If the generated SVG string is too large or malformed, the QSvgRenderer will
-//  throw warnings.
-// like:  W : qt.svg: Invalid path data; path truncated.
 QImage QrCodeGenerator::qrCodeToImage(const qrcodegen::QrCode &qrCode,
                                       quint16 border, quint16 size) const
 {
   const int qrSize = qrCode.getSize();
   const int totalSize = qrSize + 2 * border;
+  
   // Calculate scaling factor to fit requested size
   const int pixelSize = size / totalSize;
   const int imageSize = pixelSize * totalSize;
+  
   // Create the output image
   QImage image(imageSize, imageSize, QImage::Format_RGB32);
   image.fill(Qt::white);
 
+  // Initialize painter 
   QPainter painter(&image);
   painter.setBrush(Qt::black);
   painter.setPen(Qt::NoPen);
