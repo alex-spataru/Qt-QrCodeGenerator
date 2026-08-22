@@ -20,6 +20,7 @@
  * THE SOFTWARE.
  */
 
+#include <algorithm>
 #include <sstream>
 #include <string>
 #include <QPainter>
@@ -88,6 +89,100 @@ QString QrCodeGenerator::generateSvgQr(const QString &data, quint16 borderSize,
   const auto qrCode
       = qrcodegen::QrCode::encodeText(b.constData(), errorCorrection);
   return toSvgString(qrCode, borderSize);
+}
+
+/**
+ * @brief Generates an animated QR code from binary data.
+ * @param data The data to encode.
+ * @param chunkSize Maximum payload bytes per frame.
+ * @param frameDuration Suggested per-frame display interval in milliseconds.
+ * @param size The image size of each frame.
+ * @param borderSize The border size around each frame.
+ * @param errorCorrection The level of error correction to apply.
+ * @return AnimatedQrCode containing the generated frames.
+ */
+AnimatedQrCode QrCodeGenerator::generateAnimatedQr(
+    const QByteArray &data, int chunkSize, int frameDuration, quint16 size,
+    quint16 borderSize, qrcodegen::QrCode::Ecc errorCorrection)
+{
+  const auto payloads = AnimatedQrCode::splitPayload(data, chunkSize);
+
+  // Encode every frame, keeping track of the largest QR version needed
+  std::vector<qrcodegen::QrCode> codes;
+  codes.reserve(payloads.size());
+  int maxVersion = qrcodegen::QrCode::MIN_VERSION;
+  for (const auto &payload : payloads)
+  {
+    std::vector<uint8_t> bytes(payload.constData(),
+                               payload.constData() + payload.size());
+    codes.push_back(qrcodegen::QrCode::encodeBinary(bytes, errorCorrection));
+    maxVersion = std::max(maxVersion, codes.back().getVersion());
+  }
+
+  // Re-encode smaller frames at the common version so every frame has the
+  // same module count (and therefore the same image size)
+  QVector<QImage> frames;
+  frames.reserve(payloads.size());
+  for (int i = 0; i < payloads.size(); ++i)
+  {
+    if (codes[i].getVersion() != maxVersion)
+    {
+      std::vector<uint8_t> bytes(payloads[i].constData(),
+                                 payloads[i].constData() + payloads[i].size());
+      const auto segments
+          = std::vector<qrcodegen::QrSegment>{qrcodegen::QrSegment::makeBytes(bytes)};
+      codes[i] = qrcodegen::QrCode::encodeSegments(
+          segments, errorCorrection, maxVersion, maxVersion);
+    }
+
+    frames.append(qrCodeToImage(codes[i], borderSize, size));
+  }
+
+  return AnimatedQrCode(frames, payloads, frameDuration);
+}
+
+/**
+ * @brief Generates an animated QR code from a text string (encoded as UTF-8).
+ * @param data The data to encode.
+ * @param chunkSize Maximum payload bytes per frame.
+ * @param frameDuration Suggested per-frame display interval in milliseconds.
+ * @param size The image size of each frame.
+ * @param borderSize The border size around each frame.
+ * @param errorCorrection The level of error correction to apply.
+ * @return AnimatedQrCode containing the generated frames.
+ */
+AnimatedQrCode QrCodeGenerator::generateAnimatedQr(
+    const QString &data, int chunkSize, int frameDuration, quint16 size,
+    quint16 borderSize, qrcodegen::QrCode::Ecc errorCorrection)
+{
+  return generateAnimatedQr(data.toUtf8(), chunkSize, frameDuration, size,
+                            borderSize, errorCorrection);
+}
+
+/**
+ * @brief Generates an animated QR code and encodes it as a looping GIF.
+ */
+QByteArray QrCodeGenerator::generateGifQr(const QByteArray &data, int chunkSize,
+                                          int frameDuration, quint16 size,
+                                          quint16 borderSize,
+                                          qrcodegen::QrCode::Ecc errorCorrection)
+{
+  return generateAnimatedQr(data, chunkSize, frameDuration, size, borderSize,
+                            errorCorrection)
+      .toGif();
+}
+
+/**
+ * @brief Generates an animated QR code from text and encodes it as a looping
+ * GIF.
+ */
+QByteArray QrCodeGenerator::generateGifQr(const QString &data, int chunkSize,
+                                          int frameDuration, quint16 size,
+                                          quint16 borderSize,
+                                          qrcodegen::QrCode::Ecc errorCorrection)
+{
+  return generateGifQr(data.toUtf8(), chunkSize, frameDuration, size,
+                       borderSize, errorCorrection);
 }
 
 /**

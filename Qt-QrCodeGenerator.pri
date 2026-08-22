@@ -26,8 +26,10 @@ INCLUDEPATH += $$PWD/src
 
 HEADERS += \
     $$PWD/src/QrCodeGenerator.h \
+    $$PWD/src/AnimatedQrCode.h \
     $$PWD/src/qrcodegen/qrcodegen.h
 
 SOURCES += \
     $$PWD/src/QrCodeGenerator.cpp \
+    $$PWD/src/AnimatedQrCode.cpp \
     $$PWD/src/qrcodegen/qrcodegen.cpp

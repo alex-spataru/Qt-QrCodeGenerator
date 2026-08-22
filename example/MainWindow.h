@@ -27,6 +27,10 @@
 #include <QHBoxLayout>
 #include <QLineEdit>
 #include <QPushButton>
+#include <QCheckBox>
+#include <QSpinBox>
+#include <QMovie>
+#include <QBuffer>
 
 #include <QrCodeGenerator.h>
 
@@ -36,7 +40,6 @@ class MainWindow : public QMainWindow
 
 public:
   explicit MainWindow();
-  ~MainWindow();
 
 private Q_SLOTS:
   void saveQrCode();
@@ -44,6 +47,9 @@ private Q_SLOTS:
 
 private:
   QrCodeGenerator m_generator;
+  QByteArray m_gifData;
+  QBuffer *m_gifBuffer;
+  QMovie *m_movie;
 
   QWidget *m_header;
   QWidget *m_centralWidget;
@@ -52,6 +58,8 @@ private:
   QLineEdit *m_lineEdit;
   QLabel *m_qrCodeDisplay;
   QPushButton *m_saveButton;
+  QCheckBox *m_animatedCheck;
+  QSpinBox *m_chunkSizeSpin;
 
   QHBoxLayout *m_headerLayout;
   QVBoxLayout *m_verticalLayout;

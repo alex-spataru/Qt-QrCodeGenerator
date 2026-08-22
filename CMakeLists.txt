@@ -10,6 +10,7 @@ qt_standard_project_setup()
 
 qt_add_library(qrcode
     src/QrCodeGenerator.cpp
+    src/AnimatedQrCode.cpp
     src/qrcodegen/qrcodegen.cpp
 )
 

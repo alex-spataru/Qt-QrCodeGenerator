@@ -30,6 +30,8 @@
  * Constructor function, initializes the user interface & setups signals/slots.
  */
 MainWindow::MainWindow()
+  : m_gifBuffer(nullptr)
+  , m_movie(nullptr)
 {
   // Initialize layout-related widgets
   m_centralWidget = new QWidget(this);
@@ -39,6 +41,12 @@ MainWindow::MainWindow()
   m_label = new QLabel(tr("Message") + ": ", m_header);
   m_saveButton = new QPushButton(tr("Export QR Code"), m_header);
   m_lineEdit = new QLineEdit(m_header);
+  m_animatedCheck = new QCheckBox(tr("Animated"), m_header);
+  m_chunkSizeSpin = new QSpinBox(m_header);
+  m_chunkSizeSpin->setRange(1, 2000);
+  m_chunkSizeSpin->setValue(16);
+  m_chunkSizeSpin->setPrefix(tr("Chunk") + ": ");
+  m_chunkSizeSpin->setEnabled(false);
 
   // Initialize QR code image label
   m_qrCodeDisplay = new QLabel(m_centralWidget);
@@ -50,6 +58,8 @@ MainWindow::MainWindow()
   m_headerLayout = new QHBoxLayout(m_header);
   m_headerLayout->addWidget(m_label);
   m_headerLayout->addWidget(m_lineEdit);
+  m_headerLayout->addWidget(m_animatedCheck);
+  m_headerLayout->addWidget(m_chunkSizeSpin);
   m_headerLayout->addWidget(m_saveButton);
   m_headerLayout->setContentsMargins(0, 0, 0, 0);
   m_headerLayout->setStretch(1, 1);
@@ -74,6 +84,14 @@ MainWindow::MainWindow()
               generateQrCode();
           });
 
+  // Regenerate when animation settings change
+  connect(m_animatedCheck, &QCheckBox::toggled, this, [this](bool checked) {
+    m_chunkSizeSpin->setEnabled(checked);
+    generateQrCode();
+  });
+  connect(m_chunkSizeSpin, &QSpinBox::valueChanged, this,
+          [this](int) { generateQrCode(); });
+
   // Export QR code as when user clicks on the save button
   connect(m_saveButton, &QPushButton::clicked, this, &MainWindow::saveQrCode);
 
@@ -83,10 +101,29 @@ MainWindow::MainWindow()
 }
 
 /**
- * Generates a QR code from text input & saves it as a SVG file.
+ * Generates a QR code from text input & saves it as a SVG file (or an
+ * animated GIF when animated mode is enabled).
  */
 void MainWindow::saveQrCode()
 {
+  // Animated mode: export the animated GIF currently being displayed
+  if (m_animatedCheck->isChecked() && !m_gifData.isEmpty())
+  {
+    auto path = QFileDialog::getSaveFileName(this, tr("Save Animated QR Code"),
+                                             QDir::homePath(), tr("*.gif"));
+    if (!path.isEmpty())
+    {
+      QFile file(path);
+      if (file.open(QFile::WriteOnly))
+      {
+        file.write(m_gifData);
+        file.close();
+      }
+    }
+
+    return;
+  }
+
   // Obtain SVG data for QR code
   auto svg = m_generator.generateSvgQr(m_lineEdit->text());
   if (svg.isEmpty())
@@ -113,14 +150,46 @@ void MainWindow::saveQrCode()
  */
 void MainWindow::generateQrCode()
 {
-  // Get text from line edit
+  // Get text from line edit & target display size
   auto text = m_lineEdit->text();
+  const auto displaySize = m_qrCodeDisplay->size();
+  const quint16 qrSize = static_cast<quint16>(
+      qMin(displaySize.width(), displaySize.height()));
+
+  // Tear down any previous animation
+  if (m_movie)
+  {
+    m_qrCodeDisplay->setMovie(nullptr);
+    delete m_movie;
+    delete m_gifBuffer;
+    m_movie = nullptr;
+    m_gifBuffer = nullptr;
+  }
+
+  // Animated mode: generate a looping GIF & let QMovie handle playback
+  if (m_animatedCheck->isChecked())
+  {
+    m_gifData = m_generator.generateGifQr(text, m_chunkSizeSpin->value(), 500,
+                                          qrSize);
+
+    m_gifBuffer = new QBuffer(this);
+    m_gifBuffer->setData(m_gifData);
+    m_gifBuffer->open(QIODevice::ReadOnly);
+
+    m_movie = new QMovie(m_gifBuffer, "gif", this);
+    m_movie->setScaledSize(displaySize);
+    m_qrCodeDisplay->setMovie(m_movie);
+    m_qrCodeDisplay->setToolTip(text);
+    m_movie->start();
+    return;
+  }
 
   // Generate QR code from text
-  QImage unscaledImage = m_generator.generateQr(text);
-  QImage image = unscaledImage.scaled(500, 500);
+  QImage unscaledImage = m_generator.generateQr(text, qrSize);
+  QImage image = unscaledImage.scaled(displaySize);
 
   // Display generated image
   m_qrCodeDisplay->setPixmap(QPixmap::fromImage(image));
   m_qrCodeDisplay->setToolTip(text);
 }
+

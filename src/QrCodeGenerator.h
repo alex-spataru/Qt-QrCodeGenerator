@@ -27,6 +27,7 @@
 #include <QString>
 
 #include "qrcodegen/qrcodegen.h"
+#include "AnimatedQrCode.h"
 
 /**
  * @class QrCodeGenerator
@@ -87,6 +88,104 @@ public:
   QString generateSvgQr(const QString &data, const quint16 borderSize = 1,
                         qrcodegen::QrCode::Ecc errorCorrection
                         = qrcodegen::QrCode::Ecc::MEDIUM);
+
+  /**
+   * @brief Generates an animated QR code (a sequence of QR frames) from the
+   * given binary payload.
+   *
+   * The payload is split into chunks of at most @a chunkSize bytes. Each chunk
+   * is prefixed with a "{index}/{total}|" header and encoded as its own QR
+   * code frame. See @ref AnimatedQrCode for the full frame protocol.
+   *
+   * @param data The QByteArray containing the data to encode.
+   * @param chunkSize Maximum payload bytes per frame (default: 512). Values
+   * above what the chosen error-correction level can encode in a single QR
+   * code will throw qrcodegen::data_too_long.
+   * @param frameDuration Suggested display interval per frame, in
+   * milliseconds (default: 250).
+   * @param size The desired width/height of each frame image (default: 1000).
+   * @param borderSize The desired border width of each frame (default: 1).
+   * @param errorCorrection The desired error correction level (default:
+   * qrcodegen::QrCode::Ecc::MEDIUM).
+   *
+   * @return AnimatedQrCode containing the generated frames.
+   */
+  AnimatedQrCode generateAnimatedQr(const QByteArray &data,
+                                    const int chunkSize = 512,
+                                    const int frameDuration = 250,
+                                    const quint16 size = 1000,
+                                    const quint16 borderSize = 1,
+                                    qrcodegen::QrCode::Ecc errorCorrection
+                                    = qrcodegen::QrCode::Ecc::MEDIUM);
+
+  /**
+   * @brief Generates an animated QR code (a sequence of QR frames) from the
+   * given text. The text is encoded as UTF-8 before being split into frames.
+   *
+   * @param data The QString containing the data to encode.
+   * @param chunkSize Maximum payload bytes per frame (default: 512).
+   * @param frameDuration Suggested display interval per frame, in
+   * milliseconds (default: 250).
+   * @param size The desired width/height of each frame image (default: 1000).
+   * @param borderSize The desired border width of each frame (default: 1).
+   * @param errorCorrection The desired error correction level (default:
+   * qrcodegen::QrCode::Ecc::MEDIUM).
+   *
+   * @return AnimatedQrCode containing the generated frames.
+   */
+  AnimatedQrCode generateAnimatedQr(const QString &data,
+                                    const int chunkSize = 512,
+                                    const int frameDuration = 250,
+                                    const quint16 size = 1000,
+                                    const quint16 borderSize = 1,
+                                    qrcodegen::QrCode::Ecc errorCorrection
+                                    = qrcodegen::QrCode::Ecc::MEDIUM);
+
+  /**
+   * @brief Generates an animated QR code and encodes it directly as an
+   * animated GIF (GIF89a) that loops forever.
+   *
+   * This is a convenience wrapper around @ref generateAnimatedQr() and
+   * AnimatedQrCode::toGif(). The result can be written to a .gif file, or
+   * displayed without any timer logic using QMovie:
+   *
+   * @code
+   * auto *buffer = new QBuffer(this);
+   * buffer->setData(generator.generateGifQr(data));
+   * buffer->open(QIODevice::ReadOnly);
+   * auto *movie = new QMovie(buffer, "gif", this);
+   * label->setMovie(movie);
+   * movie->start();
+   * @endcode
+   *
+   * @param data The QByteArray containing the data to encode.
+   * @param chunkSize Maximum payload bytes per frame (default: 512).
+   * @param frameDuration Display interval per frame, in milliseconds
+   * (default: 250, rounded to 10 ms by the GIF format).
+   * @param size The desired width/height of each frame image (default: 1000).
+   * @param borderSize The desired border width of each frame (default: 1).
+   * @param errorCorrection The desired error correction level (default:
+   * qrcodegen::QrCode::Ecc::MEDIUM).
+   *
+   * @return QByteArray with the GIF file contents.
+   */
+  QByteArray generateGifQr(const QByteArray &data, const int chunkSize = 512,
+                           const int frameDuration = 250,
+                           const quint16 size = 1000,
+                           const quint16 borderSize = 1,
+                           qrcodegen::QrCode::Ecc errorCorrection
+                           = qrcodegen::QrCode::Ecc::MEDIUM);
+
+  /**
+   * @brief Generates an animated QR code from text and encodes it directly as
+   * an animated GIF. See the QByteArray overload for details.
+   */
+  QByteArray generateGifQr(const QString &data, const int chunkSize = 512,
+                           const int frameDuration = 250,
+                           const quint16 size = 1000,
+                           const quint16 borderSize = 1,
+                           qrcodegen::QrCode::Ecc errorCorrection
+                           = qrcodegen::QrCode::Ecc::MEDIUM);
 
 private:
   /**
